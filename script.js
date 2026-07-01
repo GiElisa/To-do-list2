@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const taskInput = document.getElementById('task-input');
     const addTaskBtn = document.getElementById('add-task-btn');
+    const changeUserBtn = document.getElementById('change-user-btn');
+    const currentUserDisplay = document.getElementById('current-user');
     const taskList = document.getElementById('task-list');
     const emptyImage = document.querySelector('.empty-image');
     const todosContainer = document.querySelector('.todos-container');
@@ -30,9 +32,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return id;
     };
 
-    const userId = getUserId();
+    let userId = getUserId();
     const firestoreEnabled = Boolean(userId);
     let tasksDoc = null;
+
+    const updateUserDisplay = () => {
+        currentUserDisplay.textContent = userId ? `Usuário: ${userId}` : 'Usuário: não definido';
+    };
+
+    updateUserDisplay();
 
     if (firestoreEnabled) {
         firebase.initializeApp(firebaseConfig);
@@ -77,8 +85,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const getTasksStorageKey = (currentUserId = userId) => `tasks:${currentUserId || 'guest'}`;
+
     const saveTasks = (tasks) => {
-        localStorage.setItem('tasks', JSON.stringify(tasks));
+        localStorage.setItem(getTasksStorageKey(userId), JSON.stringify(tasks));
         saveTasksToFirestore(tasks);
     };
 
@@ -91,6 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const loadTasksFromLocalStorage = async () => {
+        const storageKey = getTasksStorageKey(userId);
         let savedTasks = [];
 
         if (firestoreEnabled && tasksDoc) {
@@ -99,16 +110,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (doc.exists) {
                     savedTasks = doc.data().tasks || [];
                 } else {
-                    savedTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+                    savedTasks = JSON.parse(localStorage.getItem(storageKey) || localStorage.getItem('tasks') || '[]');
                 }
             } catch (error) {
                 console.error('Erro ao carregar do Firebase:', error);
-                savedTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+                savedTasks = JSON.parse(localStorage.getItem(storageKey) || localStorage.getItem('tasks') || '[]');
             }
         } else {
-            savedTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            savedTasks = JSON.parse(localStorage.getItem(storageKey) || localStorage.getItem('tasks') || '[]');
         }
 
+        taskList.innerHTML = '';
         savedTasks.forEach(({ text, completed }) => addTask(text, completed, false));
         toggleEmptyState();
         updateProgress(false);
@@ -176,6 +188,21 @@ document.addEventListener('DOMContentLoaded', () => {
             saveTaskList();
         }
     };
+    const changeUserId = () => {
+        const currentUser = localStorage.getItem('todoUserId') || '';
+        const nextUserId = prompt('Digite um novo ID de usuário para sincronizar suas tarefas:', currentUser)?.trim();
+
+        if (!nextUserId || nextUserId === currentUser) {
+            return;
+        }
+
+        localStorage.setItem('todoUserId', nextUserId);
+        userId = nextUserId;
+        updateUserDisplay();
+        saveTaskList();
+        window.location.reload();
+    };
+
     addTaskBtn.addEventListener('click', (e) => {
         e.preventDefault();
         addTask();
@@ -186,6 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
             addTask();
         }
     });
+    changeUserBtn.addEventListener('click', changeUserId);
 
     loadTasksFromLocalStorage()
 

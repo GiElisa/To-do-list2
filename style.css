@@ -179,6 +179,39 @@ body {
     background: #BCEE68;
 }
 
+.user-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(57, 116, 69, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+#current-user {
+    font-size: 0.95rem;
+    color: #f3f3f3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#change-user-btn {
+    padding: 7px 10px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+#change-user-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
 .todos-container {
     width: 100%;
     display: flex;
